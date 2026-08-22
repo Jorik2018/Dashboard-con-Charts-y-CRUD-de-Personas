@@ -1,0 +1,170 @@
+{
+  "version": 4,
+  "app_title": "Dashboard de Personas Plan",
+  "nav": {
+    "placement": "none",
+    "items": []
+  },
+  "pages": [
+    {
+      "id": "page-33a3118c",
+      "name": "Chart",
+      "route": "/",
+      "item_ref": {
+        "index": 1,
+        "text": "Construir la vista Chart con dos gráficos: pastel para distribución por género (hombres y mujeres) y barras para cantidad de personas por año de nacimiento."
+      },
+      "blocks": [
+        {
+          "id": "nav-sidebar-root",
+          "type": "sidebar",
+          "label": "Sidebar",
+          "hint": "Chart, Table",
+          "x": 0,
+          "y": 0,
+          "w": 3,
+          "h": 7,
+          "item_ref": {
+            "index": 1,
+            "text": "Construir la vista Chart con dos gráficos: pastel para distribución por género (hombres y mujeres) y barras para cantidad de personas por año de nacimiento."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "chart-header",
+          "type": "hero",
+          "label": "Encabezado del dashboard",
+          "hint": "Título, descripción corta y resumen de personas registradas",
+          "x": 3,
+          "y": 0,
+          "w": 9,
+          "h": 2,
+          "item_ref": {
+            "index": 1,
+            "text": "Construir la vista Chart con dos gráficos: pastel para distribución por género (hombres y mujeres) y barras para cantidad de personas por año de nacimiento."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "gender-pie-chart",
+          "type": "chart_pie",
+          "label": "Pastel por género",
+          "hint": "Distribución hombres vs mujeres",
+          "x": 3,
+          "y": 2,
+          "w": 4,
+          "h": 5,
+          "item_ref": {
+            "index": 1,
+            "text": "Construir la vista Chart con dos gráficos: pastel para distribución por género (hombres y mujeres) y barras para cantidad de personas por año de nacimiento."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "birth-year-bar-chart",
+          "type": "chart_bar",
+          "label": "Barras por año de nacimiento",
+          "hint": "Cantidad de personas agrupadas por año",
+          "x": 7,
+          "y": 2,
+          "w": 4,
+          "h": 5,
+          "item_ref": {
+            "index": 1,
+            "text": "Construir la vista Chart con dos gráficos: pastel para distribución por género (hombres y mujeres) y barras para cantidad de personas por año de nacimiento."
+          },
+          "type_source": "palette"
+        }
+      ],
+      "deleted_ids": []
+    },
+    {
+      "id": "page-6b965caf",
+      "name": "Table",
+      "route": "/table",
+      "item_ref": {
+        "index": 2,
+        "text": "Construir la vista Table con tabla CRUD de personas, incluyendo agregar, editar y eliminar mediante modales con validación básica."
+      },
+      "blocks": [
+        {
+          "id": "nav-sidebar-table",
+          "type": "sidebar",
+          "label": "Sidebar",
+          "hint": "Chart, Table",
+          "x": 0,
+          "y": 0,
+          "w": 3,
+          "h": 12,
+          "item_ref": {
+            "index": 2,
+            "text": "Construir la vista Table con tabla CRUD de personas, incluyendo agregar, editar y eliminar mediante modales con validación básica."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "table-header",
+          "type": "hero",
+          "label": "Encabezado de tabla",
+          "hint": "Título, descripción y botón para agregar persona",
+          "x": 3,
+          "y": 0,
+          "w": 9,
+          "h": 2,
+          "item_ref": {
+            "index": 2,
+            "text": "Construir la vista Table con tabla CRUD de personas, incluyendo agregar, editar y eliminar mediante modales con validación básica."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "persons-table",
+          "type": "table",
+          "label": "Tabla CRUD de personas",
+          "hint": "Listado con acciones de editar y eliminar",
+          "x": 3,
+          "y": 2,
+          "w": 9,
+          "h": 7,
+          "item_ref": {
+            "index": 2,
+            "text": "Construir la vista Table con tabla CRUD de personas, incluyendo agregar, editar y eliminar mediante modales con validación básica."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "person-form-modal",
+          "type": "text",
+          "label": "Modal de formulario",
+          "hint": "Agregar o editar persona con campos básicos",
+          "x": 3,
+          "y": 9,
+          "w": 4,
+          "h": 4,
+          "item_ref": {
+            "index": 2,
+            "text": "Construir la vista Table con tabla CRUD de personas, incluyendo agregar, editar y eliminar mediante modales con validación básica."
+          },
+          "type_source": "palette"
+        },
+        {
+          "id": "delete-confirm-modal",
+          "type": "text",
+          "label": "Modal de eliminación",
+          "hint": "Confirmación antes de borrar una persona",
+          "x": 7,
+          "y": 9,
+          "w": 4,
+          "h": 3,
+          "item_ref": {
+            "index": 2,
+            "text": "Construir la vista Table con tabla CRUD de personas, incluyendo agregar, editar y eliminar mediante modales con validación básica."
+          },
+          "type_source": "palette"
+        }
+      ],
+      "deleted_ids": []
+    }
+  ],
+  "attached_to_plan": false
+}
