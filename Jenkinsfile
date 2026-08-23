@@ -153,7 +153,7 @@ pipeline {
             steps {
                 withCredentials([
                     string(
-                        credentialsId: 'dashboard-mongo-uri',
+                        credentialsId: 'MONGO_URI',
                         variable: 'MONGO_URI'
                     )
                 ]) {
