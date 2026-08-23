@@ -14,56 +14,78 @@ pipeline {
     stages {
 
         stage('Install Python 3.12') {
-            steps {
-                powershell '''
-                    $pythonDir = "C:\\Tools\\Python312"
-                    $pythonExe = "$pythonDir\\python.exe"
+    steps {
+        powershell '''
+            $pythonDir = "C:\\Tools\\Python312"
+            $pythonExe = "$pythonDir\\python.exe"
 
-                    if (Test-Path $pythonExe) {
-                        Write-Host "Python 3.12 ya esta instalado"
-                        & $pythonExe --version
-                        exit 0
-                    }
-
-                    Write-Host "Python 3.12 no encontrado. Instalando..."
-
-                    if (-not (Test-Path "C:\\Tools")) {
-                        New-Item `
-                            -ItemType Directory `
-                            -Path "C:\\Tools" `
-                            -Force | Out-Null
-                    }
-
-                    $installer = "$env:TEMP\\python-3.12-installer.exe"
-
-                    Invoke-WebRequest `
-                        -Uri "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe" `
-                        -OutFile $installer
-
-                    Start-Process `
-                        -FilePath $installer `
-                        -ArgumentList @(
-                            "/quiet",
-                            "InstallAllUsers=1",
-                            "TargetDir=$pythonDir",
-                            "PrependPath=0",
-                            "Include_test=0",
-                            "Include_launcher=0"
-                        ) `
-                        -Wait
-
-                    if (-not (Test-Path $pythonExe)) {
-                        throw "Python 3.12 no se instalo correctamente"
-                    }
-
-                    Write-Host "Python instalado correctamente:"
-                    & $pythonExe --version
-
-                    Remove-Item $installer -Force -ErrorAction SilentlyContinue
-                '''
+            if (Test-Path $pythonExe) {
+                Write-Host "Python 3.12 ya esta instalado"
+                & $pythonExe --version
+                exit 0
             }
-        }
-        
+
+            Write-Host "Python 3.12 no encontrado. Instalando..."
+
+            # Windows/PowerShell antiguo puede intentar TLS 1.0/1.1.
+            # python.org requiere una negociacion TLS moderna.
+            [Net.ServicePointManager]::SecurityProtocol = `
+                [Net.SecurityProtocolType]::Tls12
+
+            if (-not (Test-Path "C:\\Tools")) {
+                New-Item `
+                    -ItemType Directory `
+                    -Path "C:\\Tools" `
+                    -Force | Out-Null
+            }
+
+            $installer = "$env:TEMP\\python-3.12-installer.exe"
+
+            Write-Host "Descargando instalador..."
+
+            Invoke-WebRequest `
+                -UseBasicParsing `
+                -Uri "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe" `
+                -OutFile $installer
+
+            if (-not (Test-Path $installer)) {
+                throw "No se pudo descargar Python"
+            }
+
+            Write-Host "Instalando Python..."
+
+            $process = Start-Process `
+                -FilePath $installer `
+                -ArgumentList @(
+                    "/quiet",
+                    "InstallAllUsers=1",
+                    "TargetDir=$pythonDir",
+                    "PrependPath=0",
+                    "Include_test=0",
+                    "Include_launcher=0"
+                ) `
+                -Wait `
+                -PassThru
+
+            if ($process.ExitCode -ne 0) {
+                throw "Instalador Python fallo con codigo $($process.ExitCode)"
+            }
+
+            if (-not (Test-Path $pythonExe)) {
+                throw "Python 3.12 no se instalo correctamente"
+            }
+
+            Write-Host "Python instalado:"
+            & $pythonExe --version
+
+            Remove-Item `
+                $installer `
+                -Force `
+                -ErrorAction SilentlyContinue
+        '''
+    }
+}
+
         stage('Check Environment') {
             steps {
                 bat '''
