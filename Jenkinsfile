@@ -6,7 +6,7 @@ pipeline {
         DB_NAME = 'dashboard'
 
         ADMIN_PROFILE = 'C:\\Users\\Administrador.WIN-5UFR8AED4T8'
-        PYTHON_HOME = 'C:\\Users\\Administrador.WIN-5UFR8AED4T8\\AppData\\Local\\Programs\\Python\\Python310'
+        PYTHON_HOME = 'C:\\Tools\\Python312'
 
         NODIST_HOME = 'C:\\Program Files (x86)\\Nodist'
     }
