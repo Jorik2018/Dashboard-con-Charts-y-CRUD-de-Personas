@@ -1,5 +1,5 @@
 import reflex as rx
-import reflex_enterprise as rxe
+import app.components.leaflet as llm
 from app.states.dashboard_state import (
     CityGroup,
     DashboardState,
@@ -8,6 +8,36 @@ from app.states.dashboard_state import (
 
 MAP_ID = "personas-map"
 
+
+def _marker(point: MapPoint) -> rx.Component:
+    return llm.circle_marker(
+        llm.tooltip(point["label"]),
+        llm.popup(
+            rx.el.div(
+                rx.el.p(
+                    point["label"],
+                    class_name="text-sm font-semibold text-gray-900",
+                ),
+                rx.el.p(
+                    f"{point['ciudad']} · {point['anio']}",
+                    class_name="text-xs font-medium text-gray-500",
+                ),
+                rx.el.p(
+                    point["coords"],
+                    class_name="text-xs font-medium text-violet-600",
+                ),
+                class_name="flex flex-col gap-0.5 font-['Inter']",
+            )
+        ),
+        center={"lat": point["lat"], "lng": point["lon"]},
+        radius=9,
+        path_options=llm.path_options(
+            color=point["color"],
+            fill_color=point["color"],
+            fill_opacity=0.65,
+            weight=2,
+        ),
+    )
 
 def _stat(label: str, value: rx.Var | str, icon: str) -> rx.Component:
     return rx.el.div(
@@ -47,37 +77,6 @@ def _stats() -> rx.Component:
             "crosshair",
         ),
         class_name="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 w-full",
-    )
-
-
-def _marker(point: MapPoint) -> rx.Component:
-    return rxe.map.circle_marker(
-        rxe.map.tooltip(point["label"]),
-        rxe.map.popup(
-            rx.el.div(
-                rx.el.p(
-                    point["label"],
-                    class_name="text-sm font-semibold text-gray-900",
-                ),
-                rx.el.p(
-                    f"{point['ciudad']} · {point['anio']}",
-                    class_name="text-xs font-medium text-gray-500",
-                ),
-                rx.el.p(
-                    point["coords"],
-                    class_name="text-xs font-medium text-violet-600",
-                ),
-                class_name="flex flex-col gap-0.5 font-['Inter']",
-            )
-        ),
-        center={"lat": point["lat"], "lng": point["lon"]},
-        radius=9,
-        path_options=rxe.map.path_options(
-            color=point["color"],
-            fill_color=point["color"],
-            fill_opacity=0.65,
-            weight=2,
-        ),
     )
 
 
@@ -128,7 +127,7 @@ def _map_card() -> rx.Component:
                     rx.el.span("Vista general", class_name="hidden sm:inline"),
                     on_click=[
                         DashboardState.reset_map_view,
-                        rxe.map.api(MAP_ID).fly_to(
+                        llm.api(MAP_ID).fly_to(
                             DashboardState.map_center,
                             DashboardState.map_zoom,
                         ),
@@ -140,8 +139,8 @@ def _map_card() -> rx.Component:
             class_name="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 px-5 py-4",
         ),
         rx.el.div(
-            rxe.map(
-                rxe.map.tile_layer(
+            llm.map(
+                llm.tile_layer(
                     url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attribution">CARTO</a>',
                 ),
@@ -156,7 +155,6 @@ def _map_card() -> rx.Component:
         ),
         class_name="flex flex-col w-full rounded-xl border border-gray-200 bg-white overflow-hidden",
     )
-
 
 def _location_row(point: MapPoint) -> rx.Component:
     return rx.el.button(
@@ -181,7 +179,7 @@ def _location_row(point: MapPoint) -> rx.Component:
         rx.icon("chevron-right", class_name="h-4 w-4 text-gray-300 shrink-0"),
         on_click=[
             DashboardState.select_point(point["id"]),
-            rxe.map.api(MAP_ID).fly_to(
+            llm.api(MAP_ID).fly_to(
                 {"lat": point["lat"], "lng": point["lon"]}, 11.0
             ),
         ],
@@ -191,7 +189,6 @@ def _location_row(point: MapPoint) -> rx.Component:
             "flex items-center gap-3 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer",
         ),
     )
-
 
 def _city_row(city: CityGroup) -> rx.Component:
     return rx.el.button(
@@ -214,12 +211,11 @@ def _city_row(city: CityGroup) -> rx.Component:
             city["total"],
             class_name="w-fit shrink-0 rounded-full bg-violet-100 px-2 py-1 text-xs font-semibold text-violet-600",
         ),
-        on_click=rxe.map.api(MAP_ID).fly_to(
+        on_click=llm.api(MAP_ID).fly_to(
             {"lat": city["lat"], "lng": city["lon"]}, 9.0
         ),
         class_name="flex items-center justify-between gap-3 w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 hover:bg-gray-50 transition-colors cursor-pointer",
     )
-
 
 def _empty_locations() -> rx.Component:
     return rx.el.div(
@@ -237,7 +233,6 @@ def _empty_locations() -> rx.Component:
         ),
         class_name="flex flex-col items-center justify-center py-10 px-5 text-center w-full",
     )
-
 
 def _side_panel() -> rx.Component:
     return rx.el.div(
@@ -283,7 +278,6 @@ def _side_panel() -> rx.Component:
         ),
         class_name="flex flex-col w-full rounded-xl border border-gray-200 bg-white overflow-hidden",
     )
-
 
 def map_view() -> rx.Component:
     return rx.el.div(

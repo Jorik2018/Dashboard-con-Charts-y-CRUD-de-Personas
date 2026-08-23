@@ -1,21 +1,12 @@
 import reflex as rx
 from typing import TypedDict
-from reflex_enterprise.components.map.types import LatLng, latlng
+from app.components.leaflet import LatLng, latlng
+from app.services import people_service
 
 CITY_COORDS: dict[str, tuple[float, float]] = {
     "madrid": (40.4168, -3.7038),
     "bogotá": (4.711, -74.0721),
-    "bogota": (4.711, -74.0721),
-    "lima": (-12.0464, -77.0428),
-    "santiago": (-33.4489, -70.6693),
-    "ciudad de méxico": (19.4326, -99.1332),
-    "ciudad de mexico": (19.4326, -99.1332),
-    "buenos aires": (-34.6037, -58.3816),
-    "barcelona": (41.3874, 2.1686),
-    "quito": (-0.1807, -78.4678),
-    "montevideo": (-34.9011, -56.1645),
 }
-
 
 class NavItem(TypedDict):
     key: str
@@ -23,9 +14,8 @@ class NavItem(TypedDict):
     icon: str
     description: str
 
-
 class Persona(TypedDict):
-    id: int
+    id: str
     nombre: str
     apellido: str
     genero: str
@@ -33,7 +23,6 @@ class Persona(TypedDict):
     ciudad: str
     lat: float
     lon: float
-
 
 class MapPoint(TypedDict):
     id: int
@@ -46,14 +35,12 @@ class MapPoint(TypedDict):
     color: str
     coords: str
 
-
 class CityGroup(TypedDict):
     ciudad: str
     total: int
     lat: float
     lon: float
     coords: str
-
 
 class DashboardState(rx.State):
     """Shell state: navegación entre vistas y datos base compartidos."""
@@ -82,68 +69,7 @@ class DashboardState(rx.State):
         },
     ]
 
-    personas: list[Persona] = [
-        {
-            "id": 1,
-            "nombre": "Lucía",
-            "apellido": "Fernández",
-            "genero": "Mujer",
-            "anio_nacimiento": 1991,
-            "ciudad": "Madrid",
-            "lat": 40.4168,
-            "lon": -3.7038,
-        },
-        {
-            "id": 2,
-            "nombre": "Mateo",
-            "apellido": "Ríos",
-            "genero": "Hombre",
-            "anio_nacimiento": 1988,
-            "ciudad": "Bogotá",
-            "lat": 4.711,
-            "lon": -74.0721,
-        },
-        {
-            "id": 3,
-            "nombre": "Sofía",
-            "apellido": "Delgado",
-            "genero": "Mujer",
-            "anio_nacimiento": 1996,
-            "ciudad": "Lima",
-            "lat": -12.0464,
-            "lon": -77.0428,
-        },
-        {
-            "id": 4,
-            "nombre": "Diego",
-            "apellido": "Navarro",
-            "genero": "Hombre",
-            "anio_nacimiento": 1996,
-            "ciudad": "Santiago",
-            "lat": -33.4489,
-            "lon": -70.6693,
-        },
-        {
-            "id": 5,
-            "nombre": "Valeria",
-            "apellido": "Ortega",
-            "genero": "Mujer",
-            "anio_nacimiento": 2001,
-            "ciudad": "Ciudad de México",
-            "lat": 19.4326,
-            "lon": -99.1332,
-        },
-        {
-            "id": 6,
-            "nombre": "Andrés",
-            "apellido": "Cabrera",
-            "genero": "Hombre",
-            "anio_nacimiento": 1984,
-            "ciudad": "Buenos Aires",
-            "lat": -34.6037,
-            "lon": -58.3816,
-        },
-    ]
+    personas: list[Persona] = []
 
     map_center: LatLng = latlng(lat=8.0, lng=-45.0)
     map_zoom: float = 3.0
@@ -166,7 +92,7 @@ class DashboardState(rx.State):
     form_lon: str = ""
     form_errors: dict[str, str] = {}
 
-    delete_id: int = 0
+    delete_id = None
 
     generos: list[str] = ["Hombre", "Mujer"]
 
@@ -240,6 +166,11 @@ class DashboardState(rx.State):
         self.editing_id = 0
         self.form_errors = {}
 
+
+    @rx.event
+    def load_people(self):
+        self.personas = people_service.find_all()
+
     def _validate(
         self, nombre: str, apellido: str, genero: str, anio: str, ciudad: str
     ) -> dict[str, str]:
@@ -276,6 +207,7 @@ class DashboardState(rx.State):
     def _coords_por_ciudad(self, ciudad: str) -> tuple[float, float]:
         return CITY_COORDS.get(ciudad.strip().lower(), (40.4168, -3.7038))
 
+
     @rx.event
     def submit_form(self, form_data: dict[str, str]):
         nombre = str(form_data.get("nombre", "")).strip()
@@ -294,80 +226,141 @@ class DashboardState(rx.State):
         self.form_anio = anio
         self.form_ciudad = ciudad
 
-        errors = self._validate(nombre, apellido, genero, anio, ciudad)
-        lat_value = self._parse_coord(lat_raw, 90.0, "lat", errors)
-        lon_value = self._parse_coord(lon_raw, 180.0, "lon", errors)
+        errors = self._validate(
+            nombre,
+            apellido,
+            genero,
+            anio,
+            ciudad,
+        )
+
+        lat_value = self._parse_coord(
+            lat_raw,
+            90.0,
+            "lat",
+            errors,
+        )
+
+        lon_value = self._parse_coord(
+            lon_raw,
+            180.0,
+            "lon",
+            errors,
+        )
+
         if errors:
             self.form_errors = errors
             self.form_key += 1
-            return rx.toast("Revisa los campos marcados.", duration=3000)
+
+            return rx.toast(
+                "Revisa los campos marcados.",
+                duration=3000,
+            )
 
         self.form_errors = {}
+
         if self.editing_id:
-            for index, persona in enumerate(self.personas):
-                if persona["id"] == self.editing_id:
-                    lat_final = (
-                        lat_value
-                        if lat_value is not None
-                        else float(persona["lat"])
-                    )
-                    lon_final = (
-                        lon_value
-                        if lon_value is not None
-                        else float(persona["lon"])
-                    )
-                    self.personas[index] = {
-                        "id": self.editing_id,
-                        "nombre": nombre,
-                        "apellido": apellido,
-                        "genero": genero,
-                        "anio_nacimiento": int(anio),
-                        "ciudad": ciudad,
-                        "lat": lat_final,
-                        "lon": lon_final,
-                    }
-                    break
-            mensaje = f"{nombre} {apellido} fue actualizado."
-        else:
-            nuevo_id = max((p["id"] for p in self.personas), default=0) + 1
-            fallback_lat, fallback_lon = self._coords_por_ciudad(ciudad)
-            self.personas.append(
-                {
-                    "id": nuevo_id,
-                    "nombre": nombre,
-                    "apellido": apellido,
-                    "genero": genero,
-                    "anio_nacimiento": int(anio),
-                    "ciudad": ciudad,
-                    "lat": lat_value if lat_value is not None else fallback_lat,
-                    "lon": lon_value if lon_value is not None else fallback_lon,
-                }
+            persona_actual = people_service.find_by_id(
+                self.editing_id
             )
+
+            if persona_actual is None:
+                return rx.toast(
+                    "No se encontró la persona.",
+                    duration=3000,
+                )
+
+            lat_final = (
+                lat_value
+                if lat_value is not None
+                else float(persona_actual["lat"])
+            )
+
+            lon_final = (
+                lon_value
+                if lon_value is not None
+                else float(persona_actual["lon"])
+            )
+
+            persona = {
+                "nombre": nombre,
+                "apellido": apellido,
+                "genero": genero,
+                "anio_nacimiento": int(anio),
+                "ciudad": ciudad,
+                "lat": lat_final,
+                "lon": lon_final,
+            }
+
+            people_service.update(
+                self.editing_id,
+                persona,
+            )
+
+            mensaje = f"{nombre} {apellido} fue actualizado."
+
+        else:
+            fallback_lat, fallback_lon = (
+                self._coords_por_ciudad(ciudad)
+            )
+
+            persona = {
+                "nombre": nombre,
+                "apellido": apellido,
+                "genero": genero,
+                "anio_nacimiento": int(anio),
+                "ciudad": ciudad,
+                "lat": (
+                    lat_value
+                    if lat_value is not None
+                    else fallback_lat
+                ),
+                "lon": (
+                    lon_value
+                    if lon_value is not None
+                    else fallback_lon
+                ),
+            }
+
+            people_service.create(persona)
+
             mensaje = f"{nombre} {apellido} fue agregado."
+
+        # Recargar desde repository
+        self.personas = people_service.find_all()
 
         self.form_open = False
         self.editing_id = 0
-        return rx.toast(mensaje, duration=3000)
+
+        return rx.toast(
+            mensaje,
+            duration=3000,
+        )
 
     @rx.event
-    def request_delete(self, persona_id: int):
+    def request_delete(self, persona_id):
         self.delete_id = persona_id
 
     @rx.event
     def cancel_delete(self):
-        self.delete_id = 0
+        self.delete_id = None
 
     @rx.event
     def confirm_delete(self):
-        persona = next(
-            (p for p in self.personas if p["id"] == self.delete_id), None
-        )
-        self.personas = [p for p in self.personas if p["id"] != self.delete_id]
-        self.delete_id = 0
-        if persona is None:
-            return rx.toast("No se encontró la persona.")
+        result = people_service.delete(self.delete_id)
+
+        if not result.deleted:
+            return rx.toast(
+                "No se pudo eliminar la persona.",
+                duration=3000,
+            )
+
+        self.personas = people_service.find_all()
+        self.delete_id = None
+
         return rx.toast(
-            f"{persona['nombre']} {persona['apellido']} fue eliminado.",
+            f"{result.persona['nombre']} "
+            f"{result.persona['apellido']} fue eliminado.",
             duration=3000,
         )
 
@@ -425,7 +418,7 @@ class DashboardState(rx.State):
 
     @rx.var
     def delete_open(self) -> bool:
-        return self.delete_id != 0
+        return self.delete_id is not None
 
     @rx.var
     def delete_nombre(self) -> str:
@@ -464,7 +457,7 @@ class DashboardState(rx.State):
             lon = float(p["lon"])
             puntos.append(
                 {
-                    "id": int(p["id"]),
+                    "id": p["id"],
                     "label": f"{p['nombre']} {p['apellido']}",
                     "genero": p["genero"],
                     "ciudad": p["ciudad"],
@@ -511,6 +504,7 @@ class DashboardState(rx.State):
 
     @rx.var
     def selected_label(self) -> str:
+        print(self.personas)
         persona = next(
             (p for p in self.personas if p["id"] == self.selected_point_id),
             None,
