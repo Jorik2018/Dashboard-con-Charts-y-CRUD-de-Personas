@@ -186,7 +186,21 @@ pipeline {
                 '''
             }
         }
+stage('Clean Service Logs') {
+    steps {
+        powershell '''
+            $path = $env:DEPLOY_PATH
 
+            Get-ChildItem `
+                -Path $path `
+                -Filter "*.log" `
+                -ErrorAction SilentlyContinue |
+            Remove-Item -Force
+
+            Write-Host "Logs anteriores eliminados"
+        '''
+    }
+}
         stage('Deploy Files') {
     steps {
         powershell '''
