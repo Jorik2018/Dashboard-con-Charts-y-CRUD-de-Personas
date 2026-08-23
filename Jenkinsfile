@@ -304,6 +304,41 @@ stage('Verify Service') {
     }
 }
 
+stage('Health Check') {
+    steps {
+        powershell '''
+            $url = "http://127.0.0.1:8000"
+
+            $timeoutSeconds = 90
+            $start = Get-Date
+            $ok = $false
+
+            while (((Get-Date) - $start).TotalSeconds -lt $timeoutSeconds) {
+                try {
+                    $response = Invoke-WebRequest `
+                        -Uri $url `
+                        -UseBasicParsing `
+                        -TimeoutSec 5
+
+                    Write-Host "HTTP status: $($response.StatusCode)"
+                    $ok = $true
+                    break
+                }
+                catch {
+                    Write-Host "Esperando Reflex..."
+                    Start-Sleep -Seconds 3
+                }
+            }
+
+            if (-not $ok) {
+                throw "Reflex no respondio en $url"
+            }
+
+            Write-Host "Reflex responde correctamente"
+        '''
+    }
+}
+
     }
 
     post {
