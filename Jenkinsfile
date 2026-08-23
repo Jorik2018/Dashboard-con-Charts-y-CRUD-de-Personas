@@ -124,10 +124,13 @@ pipeline {
                 bat '''
                     SET PATH=%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%PATH%
 
+                    if exist .venv (
+                rmdir /S /Q .venv
+            )
                     if not exist .venv (
                         python -m venv .venv
                     )
-
+                    .venv\\Scripts\\python.exe --version
                     .venv\\Scripts\\python.exe -m pip install --upgrade pip
                     .venv\\Scripts\\python.exe -m pip install -r requirements.txt
                 '''
