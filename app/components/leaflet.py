@@ -5,6 +5,8 @@ import reflex as rx
 
 
 LEAFLET_LIBRARY = "react-leaflet@5.0.0"
+LEAFLET_CORE_LIBRARY = "leaflet@1.9.4"
+
 
 class LatLng(TypedDict):
     lat: float
@@ -17,12 +19,17 @@ def latlng(lat: float, lng: float) -> LatLng:
     }
 
 class MapContainer(rx.NoSSRComponent):
-    library = LEAFLET_LIBRARY
+    library = "react-leaflet@5.0.0"
     tag = "MapContainer"
+
+    lib_dependencies = [
+        "leaflet@1.9.4",
+    ]
+
     center: rx.Var[Any]
     zoom: rx.Var[float]
     scroll_wheel_zoom: rx.Var[bool]
-
+    
 class TileLayer(rx.NoSSRComponent):
     library = LEAFLET_LIBRARY
     tag = "TileLayer"
@@ -50,39 +57,11 @@ class Tooltip(rx.NoSSRComponent):
     tag = "Tooltip"
 
 
-class MapRegistry(rx.Component):
+class MapRegistry(rx.NoSSRComponent):
+    library = "$/components/map_registry"
     tag = "MapRegistry"
 
     map_id: rx.Var[str]
-
-    def add_imports(self):
-        return {
-            "react": ["useEffect"],
-            LEAFLET_LIBRARY: ["useMap"],
-        }
-
-    def add_custom_code(self):
-        return [
-            """
-function MapRegistry({ mapId }) {
-    const map = useMap();
-
-    useEffect(() => {
-        window.__reflexLeafletMaps ??= {};
-
-        window.__reflexLeafletMaps[mapId] = map;
-
-        return () => {
-            if (window.__reflexLeafletMaps) {
-                delete window.__reflexLeafletMaps[mapId];
-            }
-        };
-    }, [map, mapId]);
-
-    return null;
-}
-"""
-        ]
 
 def map(
     *children,

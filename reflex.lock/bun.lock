@@ -7,6 +7,7 @@
         "@radix-ui/themes": "3.3.0",
         "@react-router/node": "7.18.2",
         "isbot": "5.2.1",
+        "leaflet": "1.9.4",
         "lucide-react": "1.26.0",
         "react": "19.2.8",
         "react-dom": "19.2.8",
