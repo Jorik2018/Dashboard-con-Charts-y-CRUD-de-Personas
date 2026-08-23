@@ -9,9 +9,6 @@ pipeline {
         PYTHON_HOME = 'C:\\Tools\\Python312'
 
         NODIST_HOME = 'C:\\Program Files (x86)\\Nodist'
-
-        
-        PYTHON_HOME = 'C:\\Tools\\Python312'
         
         SERVICE_MANAGER = 'D:\\wildfly\\bin\\service_manager.py'
         SERVICE_ID = 'reflex-erp'
