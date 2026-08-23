@@ -9,6 +9,14 @@ pipeline {
         PYTHON_HOME = 'C:\\Tools\\Python312'
 
         NODIST_HOME = 'C:\\Program Files (x86)\\Nodist'
+
+        
+        PYTHON_HOME = 'C:\\Tools\\Python312'
+        
+        SERVICE_MANAGER = 'D:\\wildfly\\bin\\service_manager.py'
+        SERVICE_ID = 'reflex-erp'
+        DEPLOY_PATH = 'D:\\apps\\reflex-erp'
+
     }
 
     stages {
@@ -170,6 +178,135 @@ pipeline {
                 }
             }
         }
+
+        stage('Stop Service') {
+            steps {
+                bat '''
+                    "%PYTHON_HOME%\\python.exe" ^
+                        "%SERVICE_MANAGER%" ^
+                        stop ^
+                        "%SERVICE_ID%"
+                '''
+            }
+        }
+
+        stage('Deploy Files') {
+    steps {
+        powershell '''
+            $source = $env:WORKSPACE
+            $destination = $env:DEPLOY_PATH
+
+            if (-not (Test-Path $destination)) {
+                New-Item `
+                    -ItemType Directory `
+                    -Path $destination `
+                    -Force | Out-Null
+            }
+
+            robocopy `
+                $source `
+                $destination `
+                /E `
+                /XD ".git" ".venv" "__pycache__" `
+                /XF ".env" "*.pyc"
+
+            $code = $LASTEXITCODE
+
+            # Robocopy 0-7 = éxito
+            if ($code -gt 7) {
+                throw "Robocopy failed with exit code $code"
+            }
+
+            exit 0
+        '''
+    }
+}
+
+stage('Prepare Production Environment') {
+    steps {
+        bat '''
+            if not exist "%DEPLOY_PATH%\\.venv" (
+                "%PYTHON_HOME%\\python.exe" ^
+                    -m venv ^
+                    "%DEPLOY_PATH%\\.venv"
+            )
+
+            "%DEPLOY_PATH%\\.venv\\Scripts\\python.exe" ^
+                -m pip install ^
+                --upgrade pip
+
+            "%DEPLOY_PATH%\\.venv\\Scripts\\python.exe" ^
+                -m pip install ^
+                -r "%DEPLOY_PATH%\\requirements.txt"
+        '''
+    }
+}
+
+stage('Configure Environment') {
+    steps {
+        withCredentials([
+            string(
+                credentialsId: 'dashboard-mongo-uri',
+                variable: 'MONGO_URI'
+            )
+        ]) {
+            powershell '''
+                $file = "$env:DEPLOY_PATH\\.env"
+
+                @"
+DATA_SOURCE=$env:DATA_SOURCE
+DB_NAME=$env:DB_NAME
+MONGO_URI=$env:MONGO_URI
+"@ | Set-Content `
+                    -Path $file `
+                    -Encoding UTF8
+
+                Write-Host ".env generado"
+                Write-Host "DATA_SOURCE=$env:DATA_SOURCE"
+                Write-Host "DB_NAME=$env:DB_NAME"
+                Write-Host "MONGO_URI=<secret>"
+            '''
+        }
+    }
+}
+
+stage('Configure Service') {
+    steps {
+        bat '''
+            "%PYTHON_HOME%\\python.exe" ^
+                "%SERVICE_MANAGER%" ^
+                install ^
+                "%SERVICE_ID%" ^
+                "%DEPLOY_PATH%" ^
+                --name "Reflex ERP" ^
+                --description "Dashboard Reflex ERP"
+        '''
+    }
+}
+
+
+stage('Start Service') {
+    steps {
+        bat '''
+            "%PYTHON_HOME%\\python.exe" ^
+                "%SERVICE_MANAGER%" ^
+                start ^
+                "%SERVICE_ID%"
+        '''
+    }
+}
+
+stage('Verify Service') {
+    steps {
+        bat '''
+            "%PYTHON_HOME%\\python.exe" ^
+                "%SERVICE_MANAGER%" ^
+                status ^
+                "%SERVICE_ID%"
+        '''
+    }
+}
+
     }
 
     post {
