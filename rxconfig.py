@@ -7,13 +7,7 @@ config = rx.Config(
 
 
     show_built_with_reflex=False,
-    api_url=os.getenv(
-        "API_URL",
-        "http://localhost:8000",
-    ),
 
-    deploy_url=os.getenv(
-        "DEPLOY_URL",
-        "http://localhost:3000",
-    ),
+    api_url=os.getenv("API_URL", "http://localhost:3000"),
+    deploy_url=os.getenv("DEPLOY_URL", "http://localhost:3000"),
 )
