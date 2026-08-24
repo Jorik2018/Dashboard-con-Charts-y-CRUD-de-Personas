@@ -347,36 +347,31 @@ stage('Verify Service') {
 stage('Health Check') {
     steps {
         powershell '''
-            $url = "http://127.0.0.1:3000"
+            $hostName = "127.0.0.1"
+            $port = 3000
             $maxAttempts = 5
 
             for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-
                 Write-Host "Health check $attempt/$maxAttempts..."
 
-                try {
-                    $response = Invoke-WebRequest `
-                        -Uri $url `
-                        -UseBasicParsing `
-                        -TimeoutSec 1
+                $result = Test-NetConnection `
+                    -ComputerName $hostName `
+                    -Port $port `
+                    -WarningAction SilentlyContinue
 
-                    Write-Host "HTTP $($response.StatusCode)"
+                if ($result.TcpTestSucceeded) {
+                    Write-Host "Puerto $port disponible."
+                    exit 0
+                }
 
-                    if ($response.StatusCode -eq 200) {
-                        Write-Host "Reflex esta listo."
-                        exit 0
-                    }
-                }
-                catch {
-                    Write-Host "Aun no responde: $($_.Exception.Message)"
-                }
+                Write-Host "Puerto $port aun no disponible."
 
                 if ($attempt -lt $maxAttempts) {
                     Start-Sleep -Seconds 5
                 }
             }
 
-            throw "Reflex no respondio en $url despues de $maxAttempts intentos."
+            throw "Reflex no esta escuchando en ${hostName}:${port}"
         '''
     }
 }
