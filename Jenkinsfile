@@ -347,7 +347,7 @@ stage('Verify Service') {
 stage('Health Check') {
     steps {
         powershell '''
-            $url = "http://127.0.0.1:8000"
+            $url = "http://127.0.0.1:3000"
 
             $timeoutSeconds = 20
             $start = Get-Date
