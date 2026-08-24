@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DATA_SOURCE = 'mongo'
-        DB_NAME = 'dashboard'
+        DB_NAME = 'demo'
 
         ADMIN_PROFILE = 'C:\\Users\\Administrador.WIN-5UFR8AED4T8'
         PYTHON_HOME = 'C:\\Tools\\Python312'
