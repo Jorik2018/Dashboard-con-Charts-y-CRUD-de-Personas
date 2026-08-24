@@ -186,6 +186,32 @@ pipeline {
                 '''
             }
         }
+        stage('Prepare Reflex Web') {
+    steps {
+        powershell '''
+            $web = "$env:DEPLOY_PATH\\.web"
+
+            if (Test-Path $web) {
+                Remove-Item `
+                    -Recurse `
+                    -Force `
+                    $web
+            }
+
+            & "$env:DEPLOY_PATH\\.venv\\Scripts\\reflex.exe" init
+
+            New-Item `
+                -ItemType Directory `
+                -Force `
+                "$web\\components" | Out-Null
+
+            Copy-Item `
+                "$env:DEPLOY_PATH\\app\\components\\map_registry.jsx" `
+                "$web\\components\\map_registry.jsx" `
+                -Force
+        '''
+    }
+}
 stage('Clean Service Logs') {
     steps {
         powershell '''
