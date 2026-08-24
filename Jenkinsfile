@@ -349,11 +349,11 @@ stage('Health Check') {
         powershell '''
             $url = "http://127.0.0.1:3000"
 
-            $timeoutSeconds = 20
-            $start = Get-Date
+            $timeoutSeconds = 10
+            $started = Get-Date
             $ok = $false
 
-            while (((Get-Date) - $start).TotalSeconds -lt $timeoutSeconds) {
+            while (((Get-Date) - $started).TotalSeconds -lt $timeoutSeconds) {
                 try {
                     $response = Invoke-WebRequest `
                         -Uri $url `
@@ -361,20 +361,24 @@ stage('Health Check') {
                         -TimeoutSec 5
 
                     Write-Host "HTTP status: $($response.StatusCode)"
-                    $ok = $true
-                    break
+
+                    if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 500) {
+                        $ok = $true
+                        break
+                    }
                 }
                 catch {
                     Write-Host "Esperando Reflex..."
-                    Start-Sleep -Seconds 3
                 }
+
+                Start-Sleep -Seconds 3
             }
 
             if (-not $ok) {
                 throw "Reflex no respondio en $url"
             }
 
-            Write-Host "Reflex responde correctamente"
+            Write-Host "Reflex responde correctamente en $url"
         '''
     }
 }
