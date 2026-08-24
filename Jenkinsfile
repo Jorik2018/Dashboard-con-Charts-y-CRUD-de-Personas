@@ -349,7 +349,7 @@ stage('Health Check') {
         powershell '''
             $url = "http://127.0.0.1:8000"
 
-            $timeoutSeconds = 90
+            $timeoutSeconds = 20
             $start = Get-Date
             $ok = $false
 
